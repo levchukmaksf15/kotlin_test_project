@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: testkotlin
+#  data:
+#    dynamodb:
+#      entity2ddl:
+#        auto: create-only
+  jpa:
+    hibernate:
+      ddl-auto: none
+      database: client
+      database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+      show-sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/client
+    username: postgres
+    password: postgres
+
+amazon:
+  dynamodb:
+    endpoint: http://host.docker.internal:8000
+  aws:
+    accesskey: AKIA6ODU53PFHLFOJI7H
+    secretkey: 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
