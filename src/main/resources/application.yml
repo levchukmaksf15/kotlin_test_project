@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: testkotlin
+  jpa:
+    hibernate:
+      ddl-auto: none
+      database: client
+      database-platform: org.hibernate.dialect.PostgreSQL10Dialect
+      show-sql: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/client
+    username: postgres
+    password: postgres
