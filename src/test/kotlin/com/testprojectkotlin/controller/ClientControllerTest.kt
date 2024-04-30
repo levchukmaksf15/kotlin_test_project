@@ -15,8 +15,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Profile
+import org.springframework.data.domain.PageImpl
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
@@ -59,7 +58,7 @@ class ClientControllerTest {
     @Test
     fun addClient_correctData_returnClientAndStatusOk() {
         val clientResponseDto = ClientDto(
-            id = UUID.randomUUID(),
+            id = UUID.randomUUID().toString(),
             firstName = "Mark",
             lastName = "Smith",
             email = "smith@gmail.com",
@@ -89,8 +88,8 @@ class ClientControllerTest {
         mockMvc.perform(post("/api/v1/client")
             .contentType(MediaType.APPLICATION_JSON)
             .content(clientDtoString))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(status().isNotAcceptable)
+            .andExpect(jsonPath("$.status").value(406))
             .andExpect(jsonPath("$.message").value("New client's email is not unique."))
     }
 
@@ -109,7 +108,7 @@ class ClientControllerTest {
 
     @Test
     fun deleteClient_correctData_returnClientAndStatusOk() {
-        val id: UUID = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         mockMvc.perform(delete("/api/v1/client/$id"))
             .andExpect(status().isOk())
@@ -120,7 +119,7 @@ class ClientControllerTest {
 
     @Test
     fun deleteClient_clientNotFound_returnNotFound() {
-        val id: UUID = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         `when`(clientServiceImpl.deleteClient(id))
             .thenThrow(ClientNotFoundException("Client with the id $id was not found."))
@@ -133,7 +132,7 @@ class ClientControllerTest {
 
     @Test
     fun getClientById_correctData_returnClientAndStatusOk() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         val clientResponseDto = ClientDto(
             id = id,
@@ -156,13 +155,13 @@ class ClientControllerTest {
             .andExpect(jsonPath("$.email").value(clientRequestDto.email))
             .andExpect(jsonPath("$.job").value(clientRequestDto.job))
             .andExpect(jsonPath("$.position").value(clientRequestDto.position))
-            .andExpect(jsonPath("$.id").value(id.toString()))
+            .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.gender").value("male"))
     }
 
     @Test
     fun getClientById_clientNotFound_returnNotFound() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         `when`(clientServiceImpl.getClient(id)).thenThrow(ClientNotFoundException("Client with the id $id was not found."))
 
@@ -176,7 +175,7 @@ class ClientControllerTest {
 
     @Test
     fun getAllClients_correctData_returnClientsAndStatusOk() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         val clientResponseDto = ClientDto(
             id = id,
@@ -188,29 +187,29 @@ class ClientControllerTest {
             gender = "male"
         )
 
-        `when`(clientServiceImpl.getAllClients()).thenReturn(listOf(clientResponseDto))
+        `when`(clientServiceImpl.getAllClients(0, 1)).thenReturn(PageImpl(listOf(clientResponseDto)))
 
         mockMvc.perform(get("/api/v1/client")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(clientDtoString))
+            .param("pageNumber", "0")
+            .param("pageSize", "1"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].firstName").value(clientRequestDto.firstName))
-            .andExpect(jsonPath("$[0].lastName").value(clientRequestDto.lastName))
-            .andExpect(jsonPath("$[0].email").value(clientRequestDto.email))
-            .andExpect(jsonPath("$[0].job").value(clientRequestDto.job))
-            .andExpect(jsonPath("$[0].position").value(clientRequestDto.position))
-            .andExpect(jsonPath("$[0].id").value(id.toString()))
-            .andExpect(jsonPath("$[0].gender").value("male"))
+            .andExpect(jsonPath("$.content[0].firstName").value(clientRequestDto.firstName))
+            .andExpect(jsonPath("$.content[0].lastName").value(clientRequestDto.lastName))
+            .andExpect(jsonPath("$.content[0].email").value(clientRequestDto.email))
+            .andExpect(jsonPath("$.content[0].job").value(clientRequestDto.job))
+            .andExpect(jsonPath("$.content[0].position").value(clientRequestDto.position))
+            .andExpect(jsonPath("$.content[0].id").value(id))
+            .andExpect(jsonPath("$.content[0].gender").value("male"))
     }
 
     @Test
     fun getAllClients_thereAreNoClients_returnEmptyList() {
-        `when`(clientServiceImpl.getAllClients()).thenReturn(listOf())
+        `when`(clientServiceImpl.getAllClients(0, 1)).thenReturn(PageImpl(listOf()))
 
         mockMvc.perform(get("/api/v1/client")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(clientDtoString))
+            .param("pageNumber", "0")
+            .param("pageSize", "1"))
             .andExpect(status().isOk())
-            .andExpect(content().string("[]"))
+            .andExpect(jsonPath("$.content[0]").doesNotExist())
     }
 }

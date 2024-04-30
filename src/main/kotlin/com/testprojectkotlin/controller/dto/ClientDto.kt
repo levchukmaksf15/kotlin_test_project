@@ -1,9 +1,7 @@
 package com.testprojectkotlin.controller.dto
 
-import java.util.UUID
-
 data class ClientDto (
-    val id: UUID? = null,
+    val id: String? = null,
     val firstName: String,
     val lastName: String,
     val email: String,

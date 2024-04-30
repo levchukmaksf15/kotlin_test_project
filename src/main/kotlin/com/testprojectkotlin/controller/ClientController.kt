@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor
 import org.springframework.data.domain.Page
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 @RestController
 @RequiredArgsConstructor
@@ -40,7 +39,7 @@ class ClientController (val clientService: ClientService){
         ApiResponse(responseCode = "405", description = "New client's email is not unique", content = [
             Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponseBody::class))])]
     )
-    fun updateClientById(@PathVariable id: UUID, @RequestBody clientDto: ClientDto): ResponseEntity<ClientDto> {
+    fun updateClientById(@PathVariable id: String, @RequestBody clientDto: ClientDto): ResponseEntity<ClientDto> {
         return ResponseEntity.ok(clientService.updateClient(id, clientDto))
     }
 
@@ -50,7 +49,7 @@ class ClientController (val clientService: ClientService){
         ApiResponse(responseCode = "404", description = "Client was not found by id", content = [
             Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponseBody::class))])]
     )
-    fun deleteClient(@PathVariable id: UUID): ResponseEntity<String> {
+    fun deleteClient(@PathVariable id: String): ResponseEntity<String> {
         clientService.deleteClient(id)
         return ResponseEntity.ok("Client with id $id was deleted successfully")
     }
@@ -62,7 +61,7 @@ class ClientController (val clientService: ClientService){
         ApiResponse(responseCode = "404", description = "Client was not found by id", content = [
             Content(mediaType = "application/json", schema = Schema(implementation = ErrorResponseBody::class))])]
     )
-    fun getClient(@PathVariable id: UUID): ResponseEntity<ClientDto> {
+    fun getClient(@PathVariable id: String): ResponseEntity<ClientDto> {
         return ResponseEntity.ok(clientService.getClient(id))
     }
 
@@ -72,19 +71,5 @@ class ClientController (val clientService: ClientService){
         @RequestParam("pageSize") pageSize: Int
     ): ResponseEntity<Page<ClientDto>> {
         return ResponseEntity.ok(clientService.getAllClients(pageNumber, pageSize))
-    }
-
-    @GetMapping("/search")
-    fun advancedSearchByFirstNameAndLastName(
-        @RequestParam("pageNumber") pageNumber: Int,
-        @RequestParam("pageSize") pageSize: Int,
-        @RequestParam("firstName") firstName: String,
-        @RequestParam("lastName") lastName: String
-    ): ResponseEntity<Page<ClientDto>> {
-        return ResponseEntity.ok(clientService.getClientsByFirstNameAndLastName(
-            pageNumber,
-            pageSize,
-            firstName,
-            lastName))
     }
 }

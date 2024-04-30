@@ -4,18 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.testprojectkotlin.controller.dto.ClientDto
 import com.testprojectkotlin.repository.ClientRepository
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import java.util.*
 
-@ExtendWith(SpringExtension::class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
@@ -32,9 +29,10 @@ class ClientIntegrationTest {
     @Order(1)
     fun getAllClients_thereAreNoClients_returnEmptyList() {
         mockMvc.perform(get("/api/v1/client")
-            .contentType(MediaType.APPLICATION_JSON))
+            .param("pageNumber", "0")
+            .param("pageSize", "1"))
             .andExpect(status().isOk())
-            .andExpect(content().string("[]"))
+            .andExpect(jsonPath("$.content[0]").doesNotExist())
     }
 
     @Test
@@ -74,9 +72,9 @@ class ClientIntegrationTest {
         mockMvc.perform(post("/api/v1/client")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(clientRequestDto)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.message").value("New client's email is not unique."))
+            .andExpect(status().isNotAcceptable)
+            .andExpect(jsonPath("$.status").value(406))
+            .andExpect(jsonPath("$.message").value("New client's email is not unique"))
     }
 
     @Test
@@ -126,7 +124,7 @@ class ClientIntegrationTest {
     @Test
     @Order(6)
     fun getClientById_clientNotFound_returnNotFound() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         mockMvc.perform(get("/api/v1/client/$id")
             .contentType(MediaType.APPLICATION_JSON))
@@ -147,14 +145,16 @@ class ClientIntegrationTest {
         )
 
         mockMvc.perform(get("/api/v1/client")
+            .param("pageNumber", "0")
+            .param("pageSize", "1")
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].firstName").value(clientRequestDto.firstName))
-            .andExpect(jsonPath("$[0].lastName").value(clientRequestDto.lastName))
-            .andExpect(jsonPath("$[0].email").value(clientRequestDto.email))
-            .andExpect(jsonPath("$[0].job").value(clientRequestDto.job))
-            .andExpect(jsonPath("$[0].position").value(clientRequestDto.position))
-            .andExpect(jsonPath("$[0].gender").value("male"))
+            .andExpect(jsonPath("$.content[0].firstName").value(clientRequestDto.firstName))
+            .andExpect(jsonPath("$.content[0].lastName").value(clientRequestDto.lastName))
+            .andExpect(jsonPath("$.content[0].email").value(clientRequestDto.email))
+            .andExpect(jsonPath("$.content[0].job").value(clientRequestDto.job))
+            .andExpect(jsonPath("$.content[0].position").value(clientRequestDto.position))
+            .andExpect(jsonPath("$.content[0].gender").value("male"))
     }
 
     @Test
@@ -170,7 +170,7 @@ class ClientIntegrationTest {
     @Test
     @Order(9)
     fun deleteClient_clientNotFound_returnNotFound() {
-        val id: UUID = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         mockMvc.perform(delete("/api/v1/client/$id"))
             .andExpect(status().isNotFound)
@@ -178,7 +178,7 @@ class ClientIntegrationTest {
             .andExpect(jsonPath("$.message").value("Client with the id $id was not found."))
     }
 
-    private fun getClientId(): UUID? {
+    private fun getClientId(): String? {
         val client = clientRepository.findByEmail("smith-test@gmail.com")
         if (client.isPresent) {
             return client.get().id

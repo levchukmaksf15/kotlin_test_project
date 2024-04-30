@@ -26,16 +26,13 @@ extra["springCloudVersion"] = "2023.0.1"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
-//	implementation("com.github.derjust:spring-data-dynamodb:5.1.0")
-//	implementation("com.amazonaws:aws-java-sdk-dynamodb:1.12.709")
-	implementation("org.postgresql:postgresql:42.7.3")
+	implementation("com.github.derjust:spring-data-dynamodb:5.1.0")
+	implementation("com.amazonaws:aws-java-sdk-dynamodb:1.12.709")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
-	testImplementation("com.h2database:h2:2.2.224")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

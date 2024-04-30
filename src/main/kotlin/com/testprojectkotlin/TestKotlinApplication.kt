@@ -6,8 +6,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients
 
 @SpringBootApplication
 @EnableFeignClients
-class TestkotlinApplication
+class TestKotlinApplication
 
 fun main(args: Array<String>) {
-	runApplication<TestkotlinApplication>(*args)
+	runApplication<TestKotlinApplication>(*args)
 }

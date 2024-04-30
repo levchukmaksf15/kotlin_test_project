@@ -17,6 +17,9 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -62,7 +65,7 @@ class ClientServiceTest {
             job = "andersen",
             position = "developer",
             gender = "male",
-            id = UUID.randomUUID()
+            id = UUID.randomUUID().toString()
         )
 
         `when`(clientRepository.existsByEmail("smith@gmail.com")).thenReturn(false)
@@ -123,7 +126,7 @@ class ClientServiceTest {
 
     @Test
     fun deleteClient_correctData_deleteClient() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         `when`(clientRepository.existsById(id)).thenReturn(true)
 
@@ -135,7 +138,7 @@ class ClientServiceTest {
 
     @Test
     fun deleteClient_clientNotFound_throwException() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         `when`(clientRepository.existsById(id)).thenReturn(false)
 
@@ -146,7 +149,7 @@ class ClientServiceTest {
 
     @Test
     fun gerClientById_correctData_returnClient() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         val savedClient = Client(
             firstName = "Mark",
@@ -155,7 +158,7 @@ class ClientServiceTest {
             job = "andersen",
             position = "developer",
             gender = "male",
-            id = UUID.randomUUID()
+            id = id
         )
 
         `when`(clientRepository.findById(id)).thenReturn(Optional.of(savedClient))
@@ -172,7 +175,7 @@ class ClientServiceTest {
 
     @Test
     fun getClient_clientNotFound_throwException() {
-        val id = UUID.randomUUID()
+        val id = UUID.randomUUID().toString()
 
         `when`(clientRepository.findById(id)).thenReturn(Optional.empty())
 
@@ -181,36 +184,36 @@ class ClientServiceTest {
         }
     }
 
-//    @Test
-//    fun gerAllClients_correctData_returnClients() {
-//        val savedClient = Client(
-//            firstName = "Mark",
-//            lastName = "Smith",
-//            email = "smith@gmail.com",
-//            job = "andersen",
-//            position = "developer",
-//            gender = "male",
-//            id = UUID.randomUUID()
-//        )
-//
-//        `when`(clientRepository.findAll()).thenReturn(listOf(savedClient))
-//
-//        val clients = clientServiceImpl.getAllClients()
-//
-//        assertThat(clients[0].gender).isEqualTo("male")
-//        assertThat(clients[0].firstName).isEqualTo("Mark")
-//        assertThat(clients[0].lastName).isEqualTo("Smith")
-//        assertThat(clients[0].email).isEqualTo("smith@gmail.com")
-//        assertThat(clients[0].job).isEqualTo("andersen")
-//        assertThat(clients[0].position).isEqualTo("developer")
-//    }
+    @Test
+    fun gerAllClients_correctData_returnClients() {
+        val savedClient = Client(
+            firstName = "Mark",
+            lastName = "Smith",
+            email = "smith@gmail.com",
+            job = "andersen",
+            position = "developer",
+            gender = "male",
+            id = UUID.randomUUID().toString()
+        )
 
-//    @Test
-//    fun gerAllClients_thereAteNoClients_returnEmptyList() {
-//        `when`(clientRepository.findAll()).thenReturn(listOf<Client>())
-//
-//        val clients = clientServiceImpl.getAllClients()
-//
-//        assertThat(clients).isEqualTo(listOf<Client>())
-//    }
+        `when`(clientRepository.findAll(PageRequest.of(0, 1))).thenReturn(PageImpl(listOf(savedClient)))
+
+        val clients = clientServiceImpl.getAllClients(0, 1)
+
+        assertThat(clients.content[0].gender).isEqualTo("male")
+        assertThat(clients.content[0].firstName).isEqualTo("Mark")
+        assertThat(clients.content[0].lastName).isEqualTo("Smith")
+        assertThat(clients.content[0].email).isEqualTo("smith@gmail.com")
+        assertThat(clients.content[0].job).isEqualTo("andersen")
+        assertThat(clients.content[0].position).isEqualTo("developer")
+    }
+
+    @Test
+    fun gerAllClients_thereAteNoClients_returnEmptyList() {
+        `when`(clientRepository.findAll(PageRequest.of(0, 1))).thenReturn(Page.empty())
+
+        val clients = clientServiceImpl.getAllClients(0, 1)
+
+        assertThat(clients.content).isEqualTo(listOf<Client>())
+    }
 }

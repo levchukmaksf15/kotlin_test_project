@@ -9,10 +9,8 @@ import com.testprojectkotlin.repository.ClientRepository
 import com.testprojectkotlin.service.ClientService
 import com.testprojectkotlin.service.FeignClient
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class ClientServiceImpl(val clientRepository: ClientRepository,
@@ -33,26 +31,26 @@ class ClientServiceImpl(val clientRepository: ClientRepository,
         return clientRepository.save(client).toClientDto()
     }
 
-    override fun updateClient(id: UUID, clientDto: ClientDto): ClientDto {
-        val clientOptional = clientRepository.findById(id)
+    override fun updateClient(id: String, clientDto: ClientDto): ClientDto {
+        val savedClient = clientRepository.findById(id)
+        val savedClientByEmail = clientRepository.findByEmail(clientDto.email)
 
-        if (clientOptional.isEmpty) {
+        if (savedClient.isEmpty) {
             throw ClientNotFoundException("Client with the id $id was not found.")
         }
 
-        if (clientRepository.existsByEmailAndNotWithId(clientDto.email, id) == 1L) {
-            throw NotUniqueEmailException("New client's email is not unique.")
+        if (savedClientByEmail.isPresent && savedClientByEmail.get().id != id) {
+            throw NotUniqueEmailException("New client's email is not unique")
         }
 
-        val client = clientOptional.get()
+        val client = savedClient.get()
         clientDto.updateClientEntity(client)
 
         return clientRepository.save(client).toClientDto()
     }
 
-    override fun deleteClient(id: UUID) {
-        val existById = clientRepository.existsById(id)
-        if (!existById) {
+    override fun deleteClient(id: String) {
+        if (!clientRepository.existsById(id)) {
             throw ClientNotFoundException("Client with the id $id was not found.")
         }
 
@@ -65,24 +63,7 @@ class ClientServiceImpl(val clientRepository: ClientRepository,
         return clientPage.map { it.toClientDto() }
     }
 
-    override fun getClientsByFirstNameAndLastName(
-        pageNumber: Int,
-        pageSize: Int,
-        firstName: String,
-        lastName: String
-    ): Page<ClientDto> {
-        val clientList = clientRepository.findAllByPartsOfFirstNameAndLastName(
-            firstName.lowercase(Locale.getDefault()),
-            lastName.lowercase(Locale.getDefault()),
-            pageNumber,
-            pageSize)
-
-        val clientPage = PageImpl(clientList)
-
-        return clientPage.map { it.toClientDto() }
-    }
-
-    override fun getClient(id: UUID): ClientDto {
+    override fun getClient(id: String): ClientDto {
         val client = clientRepository.findById(id)
 
         if (client.isEmpty) {
